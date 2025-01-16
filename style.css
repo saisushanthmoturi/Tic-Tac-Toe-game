@@ -1,37 +1,103 @@
-*{
+/* General Reset */
+* {
     margin: 0;
     padding: 0;
-    align-items: center;
+    box-sizing: border-box;
+}
 
-}
 body {
-    background-color: #548687;
-}
-.container {
-    height: 70vh;
-    
-}
-.game {
-    height: 60vmin;
-    width: 60vmin;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #74b9ff, #00cec9);
+    color: #2d3436;
+    text-align: center;
+    min-height: 100vh;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Header */
+header h1 {
+    font-size: 2.5rem;
+    color: #2d3436;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+header h2 {
+    font-size: 1.5rem;
+    color: #636e72;
+    margin-bottom: 2rem;
+}
+
+/* Main Container */
+.container {
+    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1.5vmin;
+    margin-bottom: 1.5rem;
 }
+
+.game {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 Columns */
+    grid-template-rows: repeat(3, 1fr);   /* 3 Rows */
+    gap: 10px; /* Space between boxes */
+    width: 300px;
+    height: 300px;
+    background-color: #2d3436;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Box Styles */
 .box {
-    height: 18vmin;
-    width: 18vmin;
-    border-radius: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    background: #dfe6e9;
     border: none;
-    box-shadow: 0 0 1rem rgba(0,0,0,0.3);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
 }
+
+.box:hover {
+    transform: scale(1.1);
+    background-color: #81ecec;
+}
+
+.box:disabled {
+    cursor: not-allowed;
+    background-color: #b2bec3;
+}
+
+/* Reset Button */
 #reset {
-    padding: 1rem;
-    font-size: 1.25rem;
-    background-color: black;
-    color: #fff;
-    border-radius: 1rem;
+    padding: 0.8rem 2rem;
+    font-size: 1.2rem;
+    color: white;
+    background: #2d3436;
     border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#reset:hover {
+    background: #636e72;
+    transform: scale(1.05);
+}
+
+/* Result Message */
+.result {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #2d3436;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
