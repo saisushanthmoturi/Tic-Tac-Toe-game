@@ -1,44 +1,71 @@
-let boxes=document.querySelectorAll(".box");
-let reset=document.querySelector("#reset");
-let turno=true;
-const winpatterns=[
-    [0,1,2],
-    [0,3,6],
-    [0,4,8],
-    [1,4,7],
-    [2,5,8],
-    [3,4,5],
-    [6,7,8]
+const boxes = document.querySelectorAll(".box");
+const reset = document.querySelector("#reset");
+const result = document.querySelector(".result");
+
+let turno = true; // True for 'O', False for 'X'
+let gameOver = false;
+
+const winPatterns = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
 ];
 
-boxes.forEach((box)=> {
-    box.addEventListener("click",()=> {
-        console.log("box was clicked")
-        if(turno) {
-            box.innerText="o";
-            turno=false;
-
-        } else {
-            box.innerText="x";
-            turno=true;
-
+// Handle Box Click
+boxes.forEach((box, index) => {
+    box.addEventListener("click", () => {
+        if (!gameOver) {
+            box.innerText = turno ? "O" : "X";
+            box.disabled = true;
+            checkWinner();
+            turno = !turno; // Switch turns
         }
-        box.disabled=true;
-
     });
 });
-const checkwinner= () => {
-    for(let pattern of winpatterns) {
-        //console.log(pattern[0],pattern[1],pattern[2]);
-        //console.log(boxes[pattern[0]].innerText,boxes[pattern[1]].innerText,boxes[pattern[2]].innerText);
-        let pos1val = boxes[pattern[0]].innerText;
-        let pos2val = boxes[pattern[1]].innerText;
-        let pos3val = boxes[pattern[2]].innerText;
-        if(pos1val!="" && pos2val!="" && pos3val!="") {
-            if(pos1val==pos2val && pso2val==pos3val) {
-                console.log("winner",pos1val);
-            }
-        }
 
+// Check for Winner
+const checkWinner = () => {
+    for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (
+            boxes[a].innerText !== "" &&
+            boxes[a].innerText === boxes[b].innerText &&
+            boxes[a].innerText === boxes[c].innerText
+        ) {
+            gameOver = true;
+            result.innerText = `Winner: ${boxes[a].innerText}`;
+            highlightWinner(pattern);
+            return;
+        }
     }
-}
+
+    // Check for Draw
+    if ([...boxes].every((box) => box.innerText !== "")) {
+        gameOver = true;
+        result.innerText = "It's a Draw!";
+    }
+};
+
+// Highlight Winning Pattern
+const highlightWinner = (pattern) => {
+    pattern.forEach((index) => {
+        boxes[index].style.backgroundColor = "#55efc4";
+    });
+};
+
+// Reset Game
+reset.addEventListener("click", () => {
+    boxes.forEach((box) => {
+        box.innerText = "";
+        box.style.backgroundColor = "#dfe6e9";
+        box.disabled = false;
+    });
+    result.innerText = "";
+    turno = true;
+    gameOver = false;
+});
