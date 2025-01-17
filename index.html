@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe - Sunny Moturi</title>
+    <title>Interactive Tic Tac Toe with Chatbot</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        
+        <h1>Tic Tac Toe game</h1>
+        <h2>John Doe is playing Tic Tac Toe</h2>
     </header>
     <main>
-        <div class="container">
+        <div class="game-area">
             <div class="game">
                 <button class="box"></button>
                 <button class="box"></button>
@@ -24,9 +25,31 @@
                 <button class="box"></button>
             </div>
         </div>
-        <div class="result"></div>
-        <button id="reset">Reset Game</button>
+        <div class="controls">
+            <div class="result"></div>
+            <br>
+            <button id="reset">Restart Game</button>
+        </div>
     </main>
+
+    <!-- Chatbot Section -->
+    <div class="chatbot-icon" id="chatbot-icon">
+        💬
+    </div>
+    <div class="chatbot" id="chatbot">
+        <div class="chat-header">
+            <h3>Game Chatbot</h3>
+            <button id="close-chat">✖</button>
+        </div>
+        <div class="chat-content" id="chat-content">
+            <p>Welcome! Ask me for tips or interact with me!</p>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Type your message..." />
+            <button id="send-chat">Send</button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
