@@ -1,118 +1,274 @@
-const boxes = document.querySelectorAll(".box");
-const reset = document.querySelector("#reset");
-const result = document.querySelector(".result");
-const chatbotIcon = document.querySelector("#chatbot-icon");
-const chatbot = document.querySelector("#chatbot");
-const chatContent = document.querySelector("#chat-content");
-const chatInput = document.querySelector("#chat-input");
-const sendChat = document.querySelector("#send-chat");
-const closeChat = document.querySelector("#close-chat");
+// DOM Elements
+const cells = document.querySelectorAll('.cell');
+const boardElement = document.getElementById('board');
+const scoreXElement = document.getElementById('score-x');
+const scoreOElement = document.getElementById('score-o');
+const playerXIndicator = document.getElementById('player-x');
+const playerOIndicator = document.getElementById('player-o');
+const resetBtn = document.getElementById('reset-btn');
+const menuBtn = document.getElementById('menu-btn');
+const playAgainBtn = document.getElementById('play-again-btn');
+const backToMenuBtn = document.getElementById('back-to-menu-btn');
 
-let turno = true; // True for 'O', False for 'X'
-let gameOver = false;
+const menuOverlay = document.getElementById('menu-overlay');
+const resultOverlay = document.getElementById('result-overlay');
+const resultText = document.getElementById('result-text');
+const winnerSymbol = document.getElementById('winner-symbol');
+const modeBtns = document.querySelectorAll('.mode-btn');
+
+const chatbotTrigger = document.getElementById('chatbot-trigger');
+const chatbotWindow = document.getElementById('chatbot-window');
+const closeChat = document.getElementById('close-chat');
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const sendChat = document.getElementById('send-chat');
+
+// Game State
+let board = Array(9).fill(null);
+let currentPlayer = 'X'; 
+let gameActive = false;
+let gameMode = 'pvp'; 
+let scores = { X: 0, O: 0 };
+let isThinking = false;
 
 const winPatterns = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+    [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
-// Open and Close Chatbot
-chatbotIcon.addEventListener("click", () => {
-    chatbot.classList.add("open");
-    chatbotIcon.style.display = "none";
-});
-
-closeChat.addEventListener("click", () => {
-    chatbot.classList.remove("open");
-    chatbotIcon.style.display = "flex";
-});
-
-// Chatbot Response
-const chatbotResponse = (message) => {
-    const chatMessage = document.createElement("p");
-    chatMessage.innerText = message;
-    chatContent.appendChild(chatMessage);
-    chatContent.scrollTop = chatContent.scrollHeight;
-};
-
-// Handle Chatbot Messages
-sendChat.addEventListener("click", () => {
-    const userMessage = chatInput.value.trim();
-    if (!userMessage) return;
-    chatbotResponse(`You: ${userMessage}`);
-
-    if (userMessage.toLowerCase().includes("tips")) {
-        chatbotResponse("Bot: Try to take the center position if it's available!");
-    } else if (userMessage.toLowerCase().includes("rules")) {
-        chatbotResponse("Bot: Players take turns marking a box. First to get 3 in a row wins!");
-    } else if (userMessage.toLowerCase().includes("hello")) {
-        chatbotResponse("Bot: Hello! How can I assist you today?");
+// Initialize
+function initGame(mode) {
+    gameMode = mode;
+    board = Array(9).fill(null);
+    currentPlayer = 'X';
+    gameActive = true;
+    isThinking = false;
+    
+    cells.forEach(cell => {
+        cell.innerText = '';
+        cell.className = 'cell';
+    });
+    
+    updateIndicators();
+    menuOverlay.classList.remove('active');
+    resultOverlay.classList.remove('active');
+    
+    addBotMessage(`Mode: ${mode.toUpperCase()}. Have fun!`);
+    
+    if (gameMode !== 'pvp') {
+        playerOIndicator.querySelector('.name').innerText = 'AI BOT';
     } else {
-        chatbotResponse("Bot: I'm here to assist you with the game. Ask me anything!");
+        playerOIndicator.querySelector('.name').innerText = 'Player 2';
     }
-    chatInput.value = "";
-});
+}
 
-// Handle Box Click
-boxes.forEach((box) => {
-    box.addEventListener("click", () => {
-        if (!gameOver) {
-            box.innerText = turno ? "O" : "X";
-            box.disabled = true;
-            chatbotResponse(`Player ${turno ? "O" : "X"} made a move!`);
-            checkWinner();
-            turno = !turno;
+// Handle Cell Click
+function handleCellClick(e) {
+    const index = e.target.getAttribute('data-index');
+    if (board[index] || !gameActive || isThinking) return;
+    
+    // In PVE mode, force user to be 'X'
+    const playerToken = (gameMode === 'pvp') ? currentPlayer : 'X';
+    makeMove(index, playerToken);
+}
+
+function makeMove(index, player) {
+    board[index] = player;
+    cells[index].innerText = player === 'X' ? '×' : '○';
+    cells[index].classList.add('taken', player.toLowerCase());
+    
+    if (checkWin(player)) {
+        endGame(player);
+    } else if (board.every(cell => cell !== null)) {
+        endGame('draw');
+    } else {
+        // Switch turn
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateIndicators();
+        
+        // Handle AI Turn
+        if (gameMode !== 'pvp' && currentPlayer === 'O' && gameActive) {
+            isThinking = true;
+            setTimeout(aiMove, 600);
+        } else {
+            isThinking = false;
         }
-    });
-});
+    }
+}
 
-// Check for Winner
-const checkWinner = () => {
-    for (let pattern of winPatterns) {
-        const [a, b, c] = pattern;
-        if (
-            boxes[a].innerText &&
-            boxes[a].innerText === boxes[b].innerText &&
-            boxes[a].innerText === boxes[c].innerText
-        ) {
-            gameOver = true;
-            result.innerText = `Winner: ${boxes[a].innerText}`;
-            chatbotResponse(`Bot: Congratulations Player ${boxes[a].innerText}! You won!`);
-            highlightWinner(pattern);
-            return;
+function updateIndicators() {
+    if (currentPlayer === 'X') {
+        playerXIndicator.classList.add('active');
+        playerOIndicator.classList.remove('active');
+    } else {
+        playerOIndicator.classList.add('active');
+        playerXIndicator.classList.remove('active');
+    }
+}
+
+function checkWin(player) {
+    return winPatterns.some(pattern => {
+        return pattern.every(index => board[index] === player);
+    });
+}
+
+function endGame(result) {
+    gameActive = false;
+    isThinking = false;
+    setTimeout(() => {
+        resultOverlay.classList.add('active');
+        if (result === 'draw') {
+            resultText.innerText = "IT'S A DRAW!";
+            winnerSymbol.innerText = "🤝";
+            winnerSymbol.style.color = "var(--text-secondary)";
+            addBotMessage("It's a draw!");
+        } else {
+            resultText.innerText = result === 'X' ? "PLAYER 1 WINS!" : (gameMode === 'pvp' ? "PLAYER 2 WINS!" : "AI WINS!");
+            winnerSymbol.innerText = result === 'X' ? "×" : "○";
+            winnerSymbol.style.color = result === 'X' ? "var(--player-x-color)" : "var(--player-o-color)";
+            scores[result]++;
+            updateScores();
+            addBotMessage(result === 'X' ? "Nice move, Player X!" : "AI takes the victory!");
+        }
+    }, 600);
+}
+
+function updateScores() {
+    scoreXElement.innerText = scores.X;
+    scoreOElement.innerText = scores.O;
+}
+
+// AI Logic
+function aiMove() {
+    if (!gameActive) {
+        isThinking = false;
+        return;
+    }
+    
+    const moveIndex = gameMode === 'pve-easy' ? getRandomMove() : getBestMove();
+    makeMove(moveIndex, 'O');
+}
+
+function getRandomMove() {
+    const availableMoves = board.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+}
+
+// Minimax Algorithm for Hard Mode
+function getBestMove() {
+    let bestScore = -Infinity;
+    let move;
+    for (let i = 0; i < 9; i++) {
+        if (board[i] === null) {
+            board[i] = 'O';
+            let score = minimax(board, 0, false);
+            board[i] = null;
+            if (score > bestScore) {
+                bestScore = score;
+                move = i;
+            }
         }
     }
+    return move;
+}
 
-    // Check for Draw
-    if ([...boxes].every((box) => box.innerText !== "")) {
-        gameOver = true;
-        result.innerText = "It's a Draw!";
-        chatbotResponse("Bot: The game ended in a draw. Well played!");
+const scoresMap = { O: 10, X: -10, draw: 0 };
+
+function minimax(board, depth, isMaximizing) {
+    if (checkWin('O')) return scoresMap.O - depth;
+    if (checkWin('X')) return scoresMap.X + depth;
+    if (board.every(cell => cell !== null)) return scoresMap.draw;
+
+    if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === null) {
+                board[i] = 'O';
+                let score = minimax(board, depth + 1, false);
+                board[i] = null;
+                bestScore = Math.max(score, bestScore);
+            }
+        }
+        return bestScore;
+    } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === null) {
+                board[i] = 'X';
+                let score = minimax(board, depth + 1, true);
+                board[i] = null;
+                bestScore = Math.min(score, bestScore);
+            }
+        }
+        return bestScore;
     }
-};
+}
 
-// Highlight Winning Pattern
-const highlightWinner = (pattern) => {
-    pattern.forEach((index) => {
-        boxes[index].style.backgroundColor = "#55efc4";
-    });
-};
+// Chatbot Functionality
+function addChatMessage(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.innerHTML = `<div class="text">${text}</div>`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
-// Reset Game
-reset.addEventListener("click", () => {
-    boxes.forEach((box) => {
-        box.innerText = "";
-        box.style.backgroundColor = "#dfe6e9";
-        box.disabled = false;
+function addBotMessage(text) {
+    setTimeout(() => {
+        addChatMessage(text, 'bot');
+        const count = document.querySelector('.msg-count');
+        if (count) count.innerText = parseInt(count.innerText) + 1;
+    }, 300);
+}
+
+function handleChatSubmit() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    
+    addChatMessage(text, 'user');
+    chatInput.value = '';
+    
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('tip') || lowerText.includes('help')) {
+        addBotMessage("Control the center and corners to dominate the board!");
+    } else if (lowerText.includes('hard')) {
+        addBotMessage("In hard mode, I calculate every possible outcome. Try to draw!");
+    } else {
+        addBotMessage("Interesting point! Now, focus on your next move.");
+    }
+}
+
+// Event Listeners
+cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+
+modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode');
+        initGame(mode);
     });
-    result.innerText = "";
-    chatContent.innerHTML = "<p>Welcome! Ask me for tips, rules, or say hello!</p>";
-    turno = true;
-    gameOver = false;
 });
+
+resetBtn.addEventListener('click', () => initGame(gameMode));
+playAgainBtn.addEventListener('click', () => initGame(gameMode));
+menuBtn.addEventListener('click', () => menuOverlay.classList.add('active'));
+backToMenuBtn.addEventListener('click', () => {
+    resultOverlay.classList.remove('active');
+    menuOverlay.classList.add('active');
+});
+
+chatbotTrigger.addEventListener('click', () => {
+    chatbotWindow.classList.toggle('active');
+    const count = document.querySelector('.msg-count');
+    if (count) count.innerText = '0';
+});
+
+closeChat.addEventListener('click', () => chatbotWindow.classList.remove('active'));
+sendChat.addEventListener('click', handleChatSubmit);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleChatSubmit();
+});
+
+window.onload = () => {
+    menuOverlay.classList.add('active');
+};

@@ -3,50 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Tic Tac Toe with Chatbot</title>
+    <title>Tic Tac Toe - Premium Edition</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="dark-theme">
+    <div class="background-overlay"></div>
+    
     <header>
-        <h1>Tic Tac Toe game</h1>
-        <h2>John Doe is playing Tic Tac Toe</h2>
-    </header>
-    <main>
-        <div class="game-area">
-            <div class="game">
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
-                <button class="box"></button>
+        <div class="logo">
+            <span class="logo-text">TIC TAC <span class="accent">TOE</span></span>
+        </div>
+        <div class="game-info">
+            <div class="player-indicator active" id="player-x">
+                <span class="symbol">×</span>
+                <span class="name">Player 1</span>
+                <span class="score" id="score-x">0</span>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="player-indicator" id="player-o">
+                <span class="symbol">○</span>
+                <span class="name">Player 2</span>
+                <span class="score" id="score-o">0</span>
             </div>
         </div>
-        <div class="controls">
-            <div class="result"></div>
-            <br>
-            <button id="reset">Restart Game</button>
+    </header>
+
+    <main>
+        <div class="game-container">
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            
+            <div class="win-line" id="win-line"></div>
+        </div>
+
+        <div class="game-controls">
+            <button id="reset-btn" class="btn primary">Restart Game</button>
+            <button id="menu-btn" class="btn secondary">Change Mode</button>
         </div>
     </main>
 
-    <!-- Chatbot Section -->
-    <div class="chatbot-icon" id="chatbot-icon">
-        💬
-    </div>
-    <div class="chatbot" id="chatbot">
-        <div class="chat-header">
-            <h3>Game Chatbot</h3>
-            <button id="close-chat">✖</button>
+    <!-- Game Menu Overlay -->
+    <div class="overlay active" id="menu-overlay">
+        <div class="modal">
+            <h2>Select Game Mode</h2>
+            <div class="mode-options">
+                <button class="mode-btn" data-mode="pvp">
+                    <span class="icon">👥</span>
+                    <span class="title">Player vs Player</span>
+                    <span class="desc">Local multiplayer</span>
+                </button>
+                <button class="mode-btn" data-mode="pve-easy">
+                    <span class="icon">🤖</span>
+                    <span class="title">Player vs AI (Easy)</span>
+                    <span class="desc">Bot makes random moves</span>
+                </button>
+                <button class="mode-btn" data-mode="pve-hard">
+                    <span class="icon">🧠</span>
+                    <span class="title">Player vs AI (Hard)</span>
+                    <span class="desc">Unbeatable Minimax AI</span>
+                </button>
+            </div>
         </div>
-        <div class="chat-content" id="chat-content">
-            <p>Welcome! Ask me for tips or interact with me!</p>
+    </div>
+
+    <!-- Win/Draw Overlay -->
+    <div class="overlay" id="result-overlay">
+        <div class="modal result-modal">
+            <h2 id="result-text">YOU WIN!</h2>
+            <div class="result-celebration">
+                <span class="winner-symbol" id="winner-symbol">×</span>
+            </div>
+            <div class="result-actions">
+                <button id="play-again-btn" class="btn primary">Play Again</button>
+                <button id="back-to-menu-btn" class="btn secondary">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Section -->
+    <div class="chatbot-trigger" id="chatbot-trigger">
+        <div class="pulse-ring"></div>
+        <span class="text">AI Assistant</span>
+        <span class="msg-count">1</span>
+    </div>
+
+    <div class="chatbot-window" id="chatbot-window">
+        <div class="chat-header">
+            <div class="bot-info">
+                <div class="bot-status online"></div>
+                <span>Game Master Bot</span>
+            </div>
+            <button id="close-chat" class="close-btn">&times;</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot">
+                <div class="text">Welcome to the Premium Tic Tac Toe! Ready for a challenge?</div>
+            </div>
         </div>
         <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Type your message..." />
-            <button id="send-chat">Send</button>
+            <input type="text" id="chat-input" placeholder="Ask for strategy..." autocomplete="off" />
+            <button id="send-chat" class="send-btn">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
     </div>
 
